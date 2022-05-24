@@ -16,6 +16,15 @@
         border: 1px solid white;
     }
 </style>
+<!--
+You can easily get a background image from google.
+Use bootstrap classes to make the heading tags look good. Also add some good style like background color, text color, font-size, padding, margin 
+to make the heading tags look more beautiful.
+Add style for p5.js canvas.
+Add some good style like background color, border color, box-shadow, padding, margin to make the p5.js canvas look more beautiful.
+Make the webpage using your creativity, but make sure all the above components are there in the page.
+-->
+
 <body>
 <center>
     <h3 class="heading">Object-Finder-Web-App H.W.</h3>
@@ -29,25 +38,64 @@
 </body>
 <script>
 status = "";
+name ="";
+label = "";
+objects = [];
 function setup(){
     canvas = createCanvas(580, 420);
     canvas.center();
 
     video = createCapture(VIDEO);
     video.size(580, 420);
-    video.hide();
 }
 function start(){
     objectDetector = ml5.objectDetector('cocossd', modelLoaded);
     document.getElementById("status").innerHTML = "Status: Detecting Objects";
-    name = document.getElementById("found?");
+    name = document.getElementById("obj_name");
 }
 function modelLoaded(){
     console.log("Model Loaded!");
     status = true;
 }
+function gotResult(error, results){
+    if(error){
+        console.error(error);
+    }
+    console.log(results);
+    objects = results;
+}
 function draw(){
     image(video, 0, 0, 580, 420);
+    objectDetector.detect(video, gotResult);
+
+    if(status != ""){
+        for( i = 0; i < objects.length; i++){
+            confidence = float(objects[i].confidence * 100);
+
+            fill("black");
+            label = objects[i].label;
+            text(label +" "+ confidence +"%", objects[i].x + 15, objects[i].y + 15);
+            noFill();
+            stroke("black");
+            rect(objects[i].x, objects[i].y, objects[i].width, objects[i].height);
+            console.log("rectangle");
+            document.getElementById("status").innerHTML = label + " Detected";
+
+            if(label == name){
+                video.stop();
+                objectDetector.detect(gotResult);
+                document.getElementById("status").innerHTML = label + " was Found";
+
+                var synth = window.speechSynthesis;
+                speak_data = label + " Was Found";
+                var utterThis = new SpeechSynthesisUtterance(speak_data);
+                synth.speak(utterThis);
+            }
+            else{
+                document.getElementById("status").innerHTML = name + " not found";
+            }
+        }
+    }
 }
 </script>
 </html>
